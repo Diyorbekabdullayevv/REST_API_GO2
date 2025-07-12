@@ -119,8 +119,8 @@ func execsHandler(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte("Hello Delete method on execs route!"))
 		fmt.Println("Hello Delete method on execs route!")
 	}
-	w.Write([]byte("Hello, execs route!"))
-	fmt.Println("Hello,execs route!")
+	// w.Write([]byte("Hello, execs route!"))
+	// fmt.Println("Hello,execs route!")
 }
 
 func main() {
