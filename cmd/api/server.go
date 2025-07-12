@@ -34,7 +34,7 @@ func teachersHandler(w http.ResponseWriter, r *http.Request) {
 		// userID := strings.TrimSuffix(path, "/")
 		// fmt.Println("The ID is:", userID)
 
-		//teachers/?key=value&query=value2&sortby=email&sortorder=ASC
+		//teachers/id/?key=value&query=value2&sortby=email&sortorder=ASC
 		fmt.Println("Path:", r.URL.Path)
 		userID, isID := getUserID(r.URL.Path, "teachers")
 		if !isID {
