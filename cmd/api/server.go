@@ -1,138 +1,57 @@
 package main
 
 import (
+	"crypto/tls"
 	"fmt"
 	"log"
 	"net/http"
-	"strconv"
-	"strings"
+	"os"
+	mw "restapi/internal/api/middlewares"
+	"restapi/internal/api/router"
+
+	"github.com/joho/godotenv"
 )
 
-func getUserID(path, route string) (int, bool) {
-	parts := strings.Split(strings.Trim(path, "/"), "/")
-	if len(parts) >= 2 && parts[0] == route {
-		userID, err := strconv.Atoi(parts[1])
-		if err != nil {
-			fmt.Println("Failed to convert ID to integer value:", err)
-			return 0, false
-		}
-		return userID, true
-	}
-	return 0, false
-}
-
-func rootHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello, root route!"))
-	fmt.Println("Hello, root route!")
-}
-
-func teachersHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		// fmt.Println("Path:", r.URL.Path)
-		// path := strings.TrimPrefix(r.URL.Path, "/teachers/")
-		// userID := strings.TrimSuffix(path, "/")
-		// fmt.Println("The ID is:", userID)
-
-		//teachers/id/?key=value&query=value2&sortby=email&sortorder=ASC
-		fmt.Println("Path:", r.URL.Path)
-		userID, isID := getUserID(r.URL.Path, "teachers")
-		if !isID {
-			fmt.Println("Failed to fetch user ID!")
-		} else {
-			fmt.Println("The ID is:", userID)
-		}
-
-		fmt.Println("Query params:", r.URL.Query())
-
-		queryParams := r.URL.Query()
-		key := queryParams.Get("key")
-		query := queryParams.Get("query")
-		sortby := queryParams.Get("sortby")
-		sortorder := queryParams.Get("sortorder")
-
-		if sortorder == "" {
-			sortorder = "DESC"
-		}
-
-		fmt.Println("Key:", key)
-		fmt.Println("Query:", query)
-		fmt.Println("Sort by:", sortby)
-		fmt.Println("Sort order:", sortorder)
-
-		w.Write([]byte("Hello GET method on teachers route!"))
-		fmt.Println("Hello GET method on teachers route!")
-	case http.MethodPost:
-		w.Write([]byte("Hello Post method on teachers route!"))
-		fmt.Println("Hello Post method on teachers route!")
-	case http.MethodPut:
-		w.Write([]byte("Hello Put method on teachers route!"))
-		fmt.Println("Hello Put method on teachers route!")
-	case http.MethodPatch:
-		w.Write([]byte("Hello Patch method on teachers route!"))
-		fmt.Println("Hello Patch method on teachers route!")
-	case http.MethodDelete:
-		w.Write([]byte("Hello Delete method on teachers route!"))
-		fmt.Println("Hello Delete method on teachers route!")
-	}
-	// w.Write([]byte("Hello, teachers route!"))
-	// fmt.Println("Hello,teachers route!")
-}
-
-func studentsHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		w.Write([]byte("Hello GET method on students route!"))
-		fmt.Println("Hello GET method on students route!")
-	case http.MethodPost:
-		w.Write([]byte("Hello Post method on students route!"))
-		fmt.Println("Hello Post method on students route!")
-	case http.MethodPut:
-		w.Write([]byte("Hello Put method on students route!"))
-		fmt.Println("Hello Put method on students route!")
-	case http.MethodPatch:
-		w.Write([]byte("Hello Patch method on students route!"))
-		fmt.Println("Hello Patch method on students route!")
-	case http.MethodDelete:
-		w.Write([]byte("Hello Delete method on students route!"))
-		fmt.Println("Hello Delete method on students route!")
-	}
-	// w.Write([]byte("Hello, students route!"))
-	// fmt.Println("Hello,students route!")
-}
-
-func execsHandler(w http.ResponseWriter, r *http.Request) {
-	switch r.Method {
-	case http.MethodGet:
-		w.Write([]byte("Hello GET method on execs route!"))
-		fmt.Println("Hello GET method on execs route!")
-	case http.MethodPost:
-		w.Write([]byte("Hello Post method on execs route!"))
-		fmt.Println("Hello Post method on execs route!")
-	case http.MethodPut:
-		w.Write([]byte("Hello Put method on execs route!"))
-		fmt.Println("Hello Put method on execs route!")
-	case http.MethodPatch:
-		w.Write([]byte("Hello Patch method on execs route!"))
-		fmt.Println("Hello Patch method on execs route!")
-	case http.MethodDelete:
-		w.Write([]byte("Hello Delete method on execs route!"))
-		fmt.Println("Hello Delete method on execs route!")
-	}
-	// w.Write([]byte("Hello, execs route!"))
-	// fmt.Println("Hello,execs route!")
-}
-
 func main() {
-	port := ":3000"
+	err := godotenv.Load()
+	if err != nil {
+		return
+	}
 
-	http.HandleFunc("/", rootHandler)
-	http.HandleFunc("/teachers/", teachersHandler)
-	http.HandleFunc("/students/", studentsHandler)
-	http.HandleFunc("/execs/", execsHandler)
+	port := os.Getenv("API_PORT")
+
+	// port := ":3000"
+
+	cert := "cert.pem"
+	key := "key.pem"
+
+	tlsConfig := &tls.Config{
+		MinVersion: tls.VersionTLS12,
+	}
+
+	// rl := mw.NewRateLimiter(5, time.Minute)
+
+	// hppOptions := mw.HPPOptions{
+	// 	CheckQuery:                  true,
+	// 	CheckBody:                   true,
+	// 	CheckBodyOnlyForContentType: "application/x-www-form-urlencoded",
+	// 	Whitelist:                   []string{"country", "sortBy", "sortOrder", "name", "age", "class"},
+	// }
+
+	// secureMux := mw.Cors(rl.Middleware(mw.ResponseTimeMiddleware(mw.SecurityHeaders(mw.Compression(mw.Hpp(hppOptions)(mux))))))
+	// secureMux := utils.ApplyMiddlewares(mux, mw.Hpp(hppOptions), mw.Compression, mw.SecurityHeaders, mw.ResponseTimeMiddleware, rl.Middleware, mw.Cors)
+	router := router.Router()
+	secureMux := mw.SecurityHeaders(router)
+	server := &http.Server{
+		Addr: port,
+		// Handler: mux,
+		Handler: secureMux,
+		// Handler:   middlewares.Cors(mux),
+		TLSConfig: tlsConfig,
+	}
 
 	fmt.Println("Server started running on port", port)
-	err := http.ListenAndServe(port, nil)
+	err = server.ListenAndServeTLS(cert, key)
 	if err != nil {
 		log.Fatalln("Failed to listen on port", port)
 	}
