@@ -6,5 +6,5 @@ type Teacher struct {
 	LastName  string `json:"last_name"`
 	Email     string `json:"email"`
 	Class     string `json:"class"`
-	Subject   string `json:"subject"`
+	Subject   string `json:"subject"` 
 }

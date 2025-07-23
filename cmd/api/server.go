@@ -20,8 +20,6 @@ func main() {
 
 	port := os.Getenv("API_PORT")
 
-	// port := ":3000"
-
 	cert := "cert.pem"
 	key := "key.pem"
 

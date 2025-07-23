@@ -10,13 +10,6 @@ import (
 	"strconv"
 	"strings"
 )
-
-var (
-	teachers = make(map[int]models.Teacher)
-	nextID   = 1
-	// mutex    = &sync.Mutex{}
-)
-
 func TeachersHandler(w http.ResponseWriter, r *http.Request) {
 	switch r.Method {
 	case http.MethodGet:
@@ -32,6 +25,20 @@ func TeachersHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		w.Write([]byte("Hello HEAD/OPTIONS method on teachers route!"))
 	}
+}
+
+func isValidSortOrder(order string) bool {
+	return order == "asc" || order == "desc"
+}
+func isValidSortField(field string) bool {
+	validFields := map[string]bool{
+		"first_name": true,
+		"last_name":  true,
+		"email":      true,
+		"class":      true,
+		"subject":    true,
+	}
+	return validFields[field]
 }
 
 func getTeachersHandler(w http.ResponseWriter, r *http.Request) {
@@ -52,6 +59,8 @@ func getTeachersHandler(w http.ResponseWriter, r *http.Request) {
 		var args []interface{}
 
 		query, args = addFilters(r, query, args)
+
+		query = sortParams(r, query)
 
 		rows, err := db.Query(query, args...)
 		if err != nil {
@@ -105,6 +114,28 @@ func getTeachersHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(teacher)
+}
+
+func sortParams(r *http.Request, query string) string {
+	sortParams := r.URL.Query()["sortby"]
+	if len(sortParams) > 0 {
+		query += " ORDER BY "
+		for i, param := range sortParams {
+			parts := strings.Split(param, ":")
+			if len(parts) != 2 {
+				continue
+			}
+			field, order := parts[0], parts[1]
+			if !isValidSortField(field) || !isValidSortOrder(order) {
+				continue
+			}
+			if i > 0 {
+				query += ","
+			}
+			query += " " + field + " " + order
+		}
+	}
+	return query
 }
 
 func addFilters(r *http.Request, query string, args []interface{}) (string, []interface{}) {
