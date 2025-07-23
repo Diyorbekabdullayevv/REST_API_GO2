@@ -216,11 +216,6 @@ func UpdateTeacher(w http.ResponseWriter, r *http.Request) {
 
 	userID, err := strconv.Atoi(strID)
 	if err != nil {
-		fmt.Println("This error:", err)
-		return
-	}
-
-	if err != nil {
 		log.Println("Failed to parse string to int:", err)
 		http.Error(w, "Failed to parse string to int!", http.StatusBadRequest)
 		return
@@ -282,11 +277,6 @@ func PatchTeachers(w http.ResponseWriter, r *http.Request) {
 	strID := r.PathValue("id")
 
 	userID, err := strconv.Atoi(strID)
-	if err != nil {
-		fmt.Println("This error:", err)
-		return
-	}
-
 	if err != nil {
 		log.Println("Failed to parse string to int:", err)
 		http.Error(w, "Failed to parse string to int!", http.StatusBadRequest)
@@ -362,11 +352,6 @@ func DeleteTeachers(w http.ResponseWriter, r *http.Request) {
 	strID := r.PathValue("id")
 
 	userID, err := strconv.Atoi(strID)
-	if err != nil {
-		fmt.Println("This error:", err)
-		return
-	}
-
 	if err != nil {
 		log.Println("Failed to parse string to int:", err)
 		http.Error(w, "Failed to parse string to int!", http.StatusBadRequest)
